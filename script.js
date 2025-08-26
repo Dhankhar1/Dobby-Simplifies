@@ -14,9 +14,9 @@ function createStars() {
     }
 }
 
-// API configuration - try Fireworks AI first, fallback to smart responses
+// API configuration - using Google Gemini AI
 const USE_FREE_API = false;
-const FIREWORKS_API_KEY = 'fw_3ZmZ8THmZ1si3VG735qejiiJ';
+const GOOGLE_API_KEY = 'AIzaSyDeFHymzQzdER1US5_2QIMG_4mmcmr-TOM';
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (USE_FREE_API) {
                 response = await callFallbackAPI(type, input);
             } else {
-                console.log('Attempting Fireworks API call with key:', FIREWORKS_API_KEY.substring(0, 10) + '...');
-                response = await callFireworksAPI(FIREWORKS_API_KEY, type, input);
+                console.log('Attempting Google Gemini API call with key:', GOOGLE_API_KEY.substring(0, 10) + '...');
+                response = await callGoogleGeminiAPI(GOOGLE_API_KEY, type, input);
             }
             displayResponse(response);
             showSpeechBubble("There you go! I hope that helps! 🎉");
@@ -142,6 +142,54 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         return data.choices[0].message.content;
+    }
+
+    async function callGoogleGeminiAPI(apiKey, type, input) {
+        const typePrompts = {
+            explain: `Explain "${input}" in a very simple way that a 5-year-old would understand. Use fun examples, simple words, and make it exciting!`,
+            joke: `Tell a clean, funny joke about "${input}" that kids would love!`,
+            riddle: `Create a fun riddle about "${input}" that's appropriate for children, and then give the answer!`,
+            solve: `Help solve this problem: "${input}". Explain the solution step by step in a way a 5-year-old could follow!`
+        };
+
+        const prompt = `You are Dobby, a friendly and enthusiastic helper who explains things in a very simple, fun way that 5-year-olds can understand. Always be positive, use emojis, and make learning fun! ${typePrompts[type] || typePrompts.explain}`;
+
+        const requestBody = {
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 500
+            }
+        };
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        console.log('Gemini API Response status:', response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Gemini API Error response:', errorText);
+            throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('Gemini API Response data:', data);
+        
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0]) {
+            throw new Error('Invalid Gemini API response format');
+        }
+        
+        return data.candidates[0].content.parts[0].text;
     }
 
     async function callFallbackAPI(type, input) {
