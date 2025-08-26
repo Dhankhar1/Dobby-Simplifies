@@ -14,9 +14,9 @@ function createStars() {
     }
 }
 
-// API configuration - using free AI service
-const USE_FREE_API = true;
-const FIREWORKS_API_KEY = 'fw_3ZZeC2fqE3rBp4eGGp8QfrWi'; // Keep as backup
+// API configuration - using working Fireworks AI
+const USE_FREE_API = false;
+const FIREWORKS_API_KEY = 'fw_3ZmZ8THmZ1si3VG735qejiiJ';
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             let response;
-            if (USE_FREE_API || error) {
+            if (USE_FREE_API) {
                 response = await callFallbackAPI(type, input);
             } else {
                 console.log('Attempting Fireworks API call with key:', FIREWORKS_API_KEY.substring(0, 10) + '...');
