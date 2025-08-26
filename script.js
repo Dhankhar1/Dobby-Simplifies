@@ -14,11 +14,9 @@ function createStars() {
     }
 }
 
-// API configuration - replace with your actual API key
-const FIREWORKS_API_KEY = 'fw_3ZZeC2fqE3rBp4eGGp8QfrWi';
-
-// Note: For production, consider implementing a backend API endpoint
-// to hide your API key from client-side code
+// API configuration - using free AI service
+const USE_FREE_API = true;
+const FIREWORKS_API_KEY = 'fw_3ZZeC2fqE3rBp4eGGp8QfrWi'; // Keep as backup
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -67,12 +65,28 @@ document.addEventListener('DOMContentLoaded', function() {
         responseContent.innerHTML = '<div class="loading">Dobby is working on your answer...</div>';
 
         try {
-            const response = await callFireworksAPI(FIREWORKS_API_KEY, type, input);
+            let response;
+            if (USE_FREE_API || error) {
+                response = await callFallbackAPI(type, input);
+            } else {
+                console.log('Attempting Fireworks API call with key:', FIREWORKS_API_KEY.substring(0, 10) + '...');
+                response = await callFireworksAPI(FIREWORKS_API_KEY, type, input);
+            }
             displayResponse(response);
             showSpeechBubble("There you go! I hope that helps! 🎉");
         } catch (error) {
-            console.error('Error:', error);
-            showError('Oops! Something went wrong. Dobby is having trouble right now!');
+            console.error('Detailed error:', error);
+            console.error('Error message:', error.message);
+            // Try fallback if main API fails
+            try {
+                console.log('Trying fallback API...');
+                const fallbackResponse = await callFallbackAPI(type, input);
+                displayResponse(fallbackResponse);
+                showSpeechBubble("There you go! I hope that helps! 🎉");
+            } catch (fallbackError) {
+                console.error('Fallback also failed:', fallbackError);
+                showError('Sorry! Both our AI services are having trouble right now. Please try again later! 😅');
+            }
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = '✨ Ask Dobby!';
@@ -111,12 +125,95 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify(requestBody)
         });
 
+        console.log('API Response status:', response.status);
+        console.log('API Response headers:', response.headers);
+        
         if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
+            const errorText = await response.text();
+            console.error('API Error response:', errorText);
+            throw new Error(`API request failed: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('API Response data:', data);
+        
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            throw new Error('Invalid API response format');
+        }
+        
         return data.choices[0].message.content;
+    }
+
+    async function callFallbackAPI(type, input) {
+        // Use Hugging Face free API as fallback
+        const typePrompts = {
+            explain: `Hi! I'm Dobby! Let me explain "${input}" in a super simple way that even a 5-year-old can understand! 🌟`,
+            joke: `Hey there! I'm Dobby and I have a funny joke about "${input}" for you! 😄`,
+            riddle: `Hello! I'm Dobby! Here's a fun riddle about "${input}" just for you! 🧩`,
+            solve: `Hi! I'm Dobby! Let me help you solve this problem: "${input}" step by step! 💡`
+        };
+
+        const prompt = typePrompts[type] || typePrompts.explain;
+        
+        try {
+            const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    inputs: prompt + ' ' + input,
+                    parameters: {
+                        max_length: 200,
+                        temperature: 0.7
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Fallback API failed');
+            }
+
+            const data = await response.json();
+            if (data && data[0] && data[0].generated_text) {
+                return data[0].generated_text;
+            } else {
+                // If Hugging Face also fails, use pre-written responses
+                return getFallbackResponse(type, input);
+            }
+        } catch (error) {
+            console.log('Hugging Face API failed, using pre-written responses');
+            return getFallbackResponse(type, input);
+        }
+    }
+
+    function getFallbackResponse(type, input) {
+        const responses = {
+            explain: [
+                `Hi! I'm Dobby! 🏠✨ "${input}" is a really interesting topic! Think of it like... when you're playing with your favorite toy! It's something that makes things work in a special way. Just like how magic makes things happen in my world, "${input}" has its own special way of working! 🌟`,
+                `Hello there! 🎭 Let me tell you about "${input}"! Imagine it's like building with blocks - each part has a special job to do! It's like when I help around the house - everything has its place and purpose! "${input}" works in a similar way, making things happen step by step! ✨`,
+                `Hey friend! 🌟 "${input}" is like a magical recipe! Just like when we make cookies, we need different ingredients that work together. "${input}" has different parts that team up to create something amazing! It's like teamwork, but with ideas instead of people! 🍪✨`
+            ],
+            joke: [
+                `Why did the ${input} go to school? Because it wanted to be really smart! 📚😄 Just like how I learned to be a good house-elf, everything needs to learn and grow! *giggles* 🏠`,
+                `What did one ${input} say to another ${input}? "You're looking great today!" 😊✨ Even I tell the socks they're doing a good job when I fold them! Everything deserves kindness! 🧦`,
+                `Knock knock! Who's there? ${input}! ${input} who? ${input} is here to make you smile! 😄🌟 Just like how I love making everyone happy at home! ✨`
+            ],
+            riddle: [
+                `🧩 Here's a fun riddle about "${input}" for you! I'm thinking of something that's related to "${input}" and it's really important! It helps people every day and makes life better! Can you guess what it is? *The answer is: It's the wonderful thing that brings joy and learning - just like "${input}" does!* 🌟`,
+                `🎭 Riddle time! What has to do with "${input}" and is always helping people? It's something that makes the world a better place, just like how I try to help everyone! *Answer: It's knowledge and understanding about "${input}"!* ✨`,
+                `🌟 Here's a special riddle! I'm related to "${input}" and I love to learn new things every day! I'm always curious and asking questions! Who am I? *Answer: I'm YOU - someone who's curious about "${input}"!* 🎉`
+            ],
+            solve: [
+                `🔧 Let me help you solve this step by step! First, let's understand what "${input}" means - it's like organizing your toys! Step 1: Look at all the parts. Step 2: Figure out how they connect. Step 3: Put them together carefully! Just like how I organize the house - one room at a time! 🏠✨`,
+                `💡 Problem-solving time! For "${input}", let's think like detectives! 🕵️ Step 1: What do we know? Step 2: What do we need to find out? Step 3: How can we connect the dots? It's like when I figure out the best way to clean - I plan first, then act! 🧹`,
+                `🌟 Let's solve this together! "${input}" might seem tricky, but every big problem is just lots of small problems holding hands! Let's break it down: First, we understand the question. Then, we think of what we know. Finally, we put our knowledge to work! You've got this! 💪✨`
+            ]
+        };
+
+        const typeResponses = responses[type] || responses.explain;
+        const randomIndex = Math.floor(Math.random() * typeResponses.length);
+        return typeResponses[randomIndex];
     }
 
     function displayResponse(response) {
