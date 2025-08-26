@@ -14,7 +14,7 @@ function createStars() {
     }
 }
 
-// API configuration - using working Fireworks AI
+// API configuration - try Fireworks AI first, fallback to smart responses
 const USE_FREE_API = false;
 const FIREWORKS_API_KEY = 'fw_3ZmZ8THmZ1si3VG735qejiiJ';
 
