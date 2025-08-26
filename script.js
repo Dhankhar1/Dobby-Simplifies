@@ -14,8 +14,9 @@ function createStars() {
     }
 }
 
-// API configuration - using secure serverless function
-const USE_SECURE_API = true;
+// API configuration - using working Google Gemini API
+const USE_SECURE_API = false;
+const GOOGLE_API_KEY = 'AIzaSyDeFHymzQzdER1US5_2QIMG_4mmcmr-TOM';
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -210,45 +211,54 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function callFallbackAPI(type, input) {
-        // Use Hugging Face free API as fallback
-        const typePrompts = {
-            explain: `Hi! I'm Dobby! Let me explain "${input}" in a super simple way that even a 5-year-old can understand! 🌟`,
-            joke: `Hey there! I'm Dobby and I have a funny joke about "${input}" for you! 😄`,
-            riddle: `Hello! I'm Dobby! Here's a fun riddle about "${input}" just for you! 🧩`,
-            solve: `Hi! I'm Dobby! Let me help you solve this problem: "${input}" step by step! 💡`
-        };
-
-        const prompt = typePrompts[type] || typePrompts.explain;
-        
+        // Try Google Gemini API first
         try {
-            const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    inputs: prompt + ' ' + input,
-                    parameters: {
-                        max_length: 200,
-                        temperature: 0.7
-                    }
-                })
-            });
+            console.log('Trying Google Gemini API...');
+            const geminiResponse = await callGoogleGeminiAPI(GOOGLE_API_KEY, type, input);
+            return geminiResponse;
+        } catch (error) {
+            console.log('Google Gemini API failed, trying Hugging Face...');
+            
+            // Use Hugging Face free API as secondary fallback
+            const typePrompts = {
+                explain: `Hi! I'm Dobby! Let me explain "${input}" in a super simple way that even a 5-year-old can understand! 🌟`,
+                joke: `Hey there! I'm Dobby and I have a funny joke about "${input}" for you! 😄`,
+                riddle: `Hello! I'm Dobby! Here's a fun riddle about "${input}" just for you! 🧩`,
+                solve: `Hi! I'm Dobby! Let me help you solve this problem: "${input}" step by step! 💡`
+            };
 
-            if (!response.ok) {
-                throw new Error('Fallback API failed');
-            }
+            const prompt = typePrompts[type] || typePrompts.explain;
+            
+            try {
+                const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: prompt + ' ' + input,
+                        parameters: {
+                            max_length: 200,
+                            temperature: 0.7
+                        }
+                    })
+                });
 
-            const data = await response.json();
-            if (data && data[0] && data[0].generated_text) {
-                return data[0].generated_text;
-            } else {
-                // If Hugging Face also fails, use pre-written responses
+                if (!response.ok) {
+                    throw new Error('Hugging Face API also failed');
+                }
+
+                const data = await response.json();
+                if (data && data[0] && data[0].generated_text) {
+                    return data[0].generated_text;
+                } else {
+                    // If Hugging Face also fails, use pre-written responses
+                    return getFallbackResponse(type, input);
+                }
+            } catch (error) {
+                console.log('All APIs failed, using pre-written intelligent responses');
                 return getFallbackResponse(type, input);
             }
-        } catch (error) {
-            console.log('Hugging Face API failed, using pre-written responses');
-            return getFallbackResponse(type, input);
         }
     }
 
