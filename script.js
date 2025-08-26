@@ -188,42 +188,79 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getFallbackResponse(type, input) {
-        const topic = input.toLowerCase();
+        const topic = input.toLowerCase().trim();
         
-        // Topic-specific knowledge base
-        const knowledgeBase = {
-            // Science topics
-            'gravity': {
-                explain: "🌟 Hi! I'm Dobby! Gravity is like an invisible friend that always pulls things down! Imagine if everything could float around like magic - that would be chaos! Gravity keeps your feet on the ground and makes sure your toys don't float to the ceiling! It's like Earth is giving everything a gentle hug, pulling it close! When you drop a ball, gravity catches it and brings it down to the ground! ✨",
-                joke: "Why doesn't gravity ever get tired? Because it never stops working out! 😄 It's always doing pull-ups with everything on Earth! Just like how I never stop helping around the house! 🏠",
-                riddle: "🧩 I'm invisible but I'm always there, I pull things down with the greatest care. Without me, you'd float in the air! What am I? *Answer: Gravity!* It's the force that keeps us all grounded! 🌍"
+        // Smart topic matching with synonyms and variations
+        const topicMatcher = {
+            gravity: {
+                keywords: ['gravity', 'gravitation', 'gravitational', 'fall', 'falling', 'weight', 'pull down', 'attraction'],
+                content: {
+                    explain: "🌟 Hi! I'm Dobby! Gravity is like an invisible friend that always pulls things down! Imagine if everything could float around like magic - that would be chaos! Gravity keeps your feet on the ground and makes sure your toys don't float to the ceiling! It's like Earth is giving everything a gentle hug, pulling it close! When you drop a ball, gravity catches it and brings it down to the ground! ✨",
+                    joke: "Why doesn't gravity ever get tired? Because it never stops working out! 😄 It's always doing pull-ups with everything on Earth! Just like how I never stop helping around the house! 🏠",
+                    riddle: "🧩 I'm invisible but I'm always there, I pull things down with the greatest care. Without me, you'd float in the air! What am I? *Answer: Gravity!* It's the force that keeps us all grounded! 🌍"
+                }
             },
-            'space': {
-                explain: "🚀 Hello friend! Space is like the biggest, darkest room you can imagine - but instead of walls, it goes on FOREVER! It's where all the stars live, like tiny sparkly lights in the sky! The Moon is our neighbor up there, and the Sun is like a giant light bulb that keeps us warm! Astronauts wear special suits to visit space because there's no air to breathe up there! ✨🌟",
-                joke: "Why didn't the Sun go to school? Because it was already too bright! 😄☀️ And why don't aliens ever land at airports? Because they're looking for space! Just like how I always look for space to store things in the house! 🛸",
-                riddle: "🌌 I'm dark and vast, with stars that shine, planets dance in a cosmic line. Astronauts visit me with rockets so fast, what am I that's infinitely vast? *Answer: Space!* The final frontier where dreams take flight! 🚀"
+            space: {
+                keywords: ['space', 'universe', 'cosmos', 'stars', 'planets', 'moon', 'sun', 'solar system', 'astronaut', 'rocket', 'galaxy'],
+                content: {
+                    explain: "🚀 Hello friend! Space is like the biggest, darkest room you can imagine - but instead of walls, it goes on FOREVER! It's where all the stars live, like tiny sparkly lights in the sky! The Moon is our neighbor up there, and the Sun is like a giant light bulb that keeps us warm! Astronauts wear special suits to visit space because there's no air to breathe up there! ✨🌟",
+                    joke: "Why didn't the Sun go to school? Because it was already too bright! 😄☀️ And why don't aliens ever land at airports? Because they're looking for space! Just like how I always look for space to store things in the house! 🛸",
+                    riddle: "🌌 I'm dark and vast, with stars that shine, planets dance in a cosmic line. Astronauts visit me with rockets so fast, what am I that's infinitely vast? *Answer: Space!* The final frontier where dreams take flight! 🚀"
+                }
             },
-            'water': {
-                explain: "💧 Hi there! Water is super special - it's like a shape-shifter! Sometimes it's liquid like in your cup, sometimes it's solid like ice cubes, and sometimes it's gas like steam from hot soup! We drink it, swim in it, and it makes plants grow big and strong! It's clear and has no taste, but it's the most important thing for all living things! Every creature needs water to live! 🌊",
-                joke: "What did the ocean say to the beach? Nothing, it just waved! 🌊😄 And why do fish live in salt water? Because pepper makes them sneeze! Just like how I have to be careful with spices when I'm cooking! 🐟",
-                riddle: "💧 I can be liquid, solid, or gas, through pipes and rivers I travel fast. I'm clear to see but wet to touch, all living things need me so much! *Answer: Water!* The essence of life itself! 🌊"
+            water: {
+                keywords: ['water', 'h2o', 'liquid', 'ocean', 'sea', 'river', 'rain', 'ice', 'steam', 'vapor', 'drink'],
+                content: {
+                    explain: "💧 Hi there! Water is super special - it's like a shape-shifter! Sometimes it's liquid like in your cup, sometimes it's solid like ice cubes, and sometimes it's gas like steam from hot soup! We drink it, swim in it, and it makes plants grow big and strong! It's clear and has no taste, but it's the most important thing for all living things! Every creature needs water to live! 🌊",
+                    joke: "What did the ocean say to the beach? Nothing, it just waved! 🌊😄 And why do fish live in salt water? Because pepper makes them sneeze! Just like how I have to be careful with spices when I'm cooking! 🐟",
+                    riddle: "💧 I can be liquid, solid, or gas, through pipes and rivers I travel fast. I'm clear to see but wet to touch, all living things need me so much! *Answer: Water!* The essence of life itself! 🌊"
+                }
             },
-            // Math topics
-            'math': {
-                explain: "🔢 Hello! Math is like a fun puzzle game! It helps us count things, like how many cookies are in the jar, or figure out how to share toys equally with friends! Numbers are like letters, but instead of making words, they help us solve problems and understand the world! Adding is like collecting things, and subtracting is like giving them away! ➕➖",
-                joke: "Why was 6 afraid of 7? Because 7, 8 (ate), 9! 😄 And why did the math book look so sad? Because it had too many problems! Just like how I sometimes have too many chores to do! 📚",
-                riddle: "🧮 I use numbers, symbols, and signs, to help you solve problems and find designs. From counting to adding, I make things clear, what subject am I that students sometimes fear? *Answer: Math!* The language of numbers and logic! ✨"
+            math: {
+                keywords: ['math', 'mathematics', 'number', 'numbers', 'count', 'add', 'subtract', 'multiply', 'divide', 'plus', 'minus', 'equation', 'calculation'],
+                content: {
+                    explain: "🔢 Hello! Math is like a fun puzzle game! It helps us count things, like how many cookies are in the jar, or figure out how to share toys equally with friends! Numbers are like letters, but instead of making words, they help us solve problems and understand the world! Adding is like collecting things, and subtracting is like giving them away! ➕➖",
+                    joke: "Why was 6 afraid of 7? Because 7, 8 (ate), 9! 😄 And why did the math book look so sad? Because it had too many problems! Just like how I sometimes have too many chores to do! 📚",
+                    riddle: "🧮 I use numbers, symbols, and signs, to help you solve problems and find designs. From counting to adding, I make things clear, what subject am I that students sometimes fear? *Answer: Math!* The language of numbers and logic! ✨"
+                }
+            },
+            animals: {
+                keywords: ['animal', 'animals', 'dog', 'cat', 'bird', 'fish', 'elephant', 'lion', 'tiger', 'bear', 'rabbit', 'horse', 'cow', 'pig', 'chicken', 'pet', 'pets', 'zoo'],
+                content: {
+                    explain: "🐶 Hi friend! Animals are amazing living creatures that share our world! They come in all shapes and sizes - some are big like elephants, some are tiny like ants! Some animals are pets that live with us like dogs and cats, and some are wild and live in forests and jungles! Each animal has special things they're good at - birds can fly, fish can swim, and cheetahs can run super fast! 🦋✨",
+                    joke: "What do you call a sleeping bull? A bulldozer! 😄🐂 And what do you call a bear with no teeth? A gummy bear! Just like the gummy treats, but much bigger and fuzzier! 🐻",
+                    riddle: "🦁 I come in many shapes and sizes, some have fur and some have feathers. Some live in water, some on land, we share this world together! What are we? *Answer: Animals!* The wonderful creatures that make our world so interesting! 🌍"
+                }
+            },
+            colors: {
+                keywords: ['color', 'colors', 'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'black', 'white', 'rainbow'],
+                content: {
+                    explain: "🌈 Hello! Colors make our world beautiful and bright! Red is like fire trucks and strawberries, blue is like the sky and ocean, green is like grass and trees! Yellow is sunny like the sun, purple is royal like grapes, and orange is cheerful like... well, oranges! Colors help us recognize things and make everything prettier! 🎨✨",
+                    joke: "What's a color's favorite music? The blues! 😄🎵 And why did the crayon go to school? To get more colorful! Just like how I learn new things to become a better helper! ️",
+                    riddle: "🌈 I make the world bright and fun to see, from red roses to the deep blue sea. I paint the sunset and morning dew, what am I that comes in every hue? *Answer: Colors!* The magic that makes everything beautiful! 🎨"
+                }
             }
         };
         
-        // Check if we have specific knowledge about this topic
-        for (const [key, content] of Object.entries(knowledgeBase)) {
-            if (topic.includes(key) || key.includes(topic)) {
-                if (type === 'explain' && content.explain) return content.explain;
-                if (type === 'joke' && content.joke) return content.joke;
-                if (type === 'riddle' && content.riddle) return content.riddle;
-                if (type === 'solve' && content.explain) return `🔧 Let me help! ${content.explain} Now let's break this down step by step!`;
+        // Smart matching function
+        function findMatchingTopic(userInput) {
+            for (const [topicName, topicData] of Object.entries(topicMatcher)) {
+                for (const keyword of topicData.keywords) {
+                    if (userInput.includes(keyword)) {
+                        return topicData.content;
+                    }
+                }
             }
+            return null;
+        }
+        
+        // Try to find a matching topic
+        const matchedContent = findMatchingTopic(topic);
+        if (matchedContent) {
+            if (type === 'explain' && matchedContent.explain) return matchedContent.explain;
+            if (type === 'joke' && matchedContent.joke) return matchedContent.joke;
+            if (type === 'riddle' && matchedContent.riddle) return matchedContent.riddle;
+            if (type === 'solve' && matchedContent.explain) return `🔧 Let me help! ${matchedContent.explain} Now let's break this down step by step!`;
         }
         
         // Generic but more intelligent responses
