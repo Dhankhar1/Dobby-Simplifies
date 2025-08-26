@@ -14,9 +14,8 @@ function createStars() {
     }
 }
 
-// API configuration - using Google Gemini AI
-const USE_FREE_API = false;
-const GOOGLE_API_KEY = 'AIzaSyDeFHymzQzdER1US5_2QIMG_4mmcmr-TOM';
+// API configuration - using secure serverless function
+const USE_SECURE_API = true;
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -66,11 +65,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             let response;
-            if (USE_FREE_API) {
-                response = await callFallbackAPI(type, input);
+            if (USE_SECURE_API) {
+                console.log('Using secure API endpoint...');
+                response = await callSecureAPI(type, input);
             } else {
-                console.log('Attempting Google Gemini API call with key:', GOOGLE_API_KEY.substring(0, 10) + '...');
-                response = await callGoogleGeminiAPI(GOOGLE_API_KEY, type, input);
+                response = await callFallbackAPI(type, input);
             }
             displayResponse(response);
             showSpeechBubble("There you go! I hope that helps! 🎉");
@@ -190,6 +189,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         return data.candidates[0].content.parts[0].text;
+    }
+
+    async function callSecureAPI(type, input) {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ type, input })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || 'API request failed');
+        }
+
+        const data = await response.json();
+        return data.response;
     }
 
     async function callFallbackAPI(type, input) {
