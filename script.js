@@ -14,8 +14,11 @@ function createStars() {
     }
 }
 
-// API configuration
+// API configuration - replace with your actual API key
 const FIREWORKS_API_KEY = 'fw_3ZZeC2fqE3rBp4eGGp8QfrWi';
+
+// Note: For production, consider implementing a backend API endpoint
+// to hide your API key from client-side code
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
