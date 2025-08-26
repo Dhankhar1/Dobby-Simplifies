@@ -188,30 +188,69 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getFallbackResponse(type, input) {
-        const responses = {
+        const topic = input.toLowerCase();
+        
+        // Topic-specific knowledge base
+        const knowledgeBase = {
+            // Science topics
+            'gravity': {
+                explain: "🌟 Hi! I'm Dobby! Gravity is like an invisible friend that always pulls things down! Imagine if everything could float around like magic - that would be chaos! Gravity keeps your feet on the ground and makes sure your toys don't float to the ceiling! It's like Earth is giving everything a gentle hug, pulling it close! When you drop a ball, gravity catches it and brings it down to the ground! ✨",
+                joke: "Why doesn't gravity ever get tired? Because it never stops working out! 😄 It's always doing pull-ups with everything on Earth! Just like how I never stop helping around the house! 🏠",
+                riddle: "🧩 I'm invisible but I'm always there, I pull things down with the greatest care. Without me, you'd float in the air! What am I? *Answer: Gravity!* It's the force that keeps us all grounded! 🌍"
+            },
+            'space': {
+                explain: "🚀 Hello friend! Space is like the biggest, darkest room you can imagine - but instead of walls, it goes on FOREVER! It's where all the stars live, like tiny sparkly lights in the sky! The Moon is our neighbor up there, and the Sun is like a giant light bulb that keeps us warm! Astronauts wear special suits to visit space because there's no air to breathe up there! ✨🌟",
+                joke: "Why didn't the Sun go to school? Because it was already too bright! 😄☀️ And why don't aliens ever land at airports? Because they're looking for space! Just like how I always look for space to store things in the house! 🛸",
+                riddle: "🌌 I'm dark and vast, with stars that shine, planets dance in a cosmic line. Astronauts visit me with rockets so fast, what am I that's infinitely vast? *Answer: Space!* The final frontier where dreams take flight! 🚀"
+            },
+            'water': {
+                explain: "💧 Hi there! Water is super special - it's like a shape-shifter! Sometimes it's liquid like in your cup, sometimes it's solid like ice cubes, and sometimes it's gas like steam from hot soup! We drink it, swim in it, and it makes plants grow big and strong! It's clear and has no taste, but it's the most important thing for all living things! Every creature needs water to live! 🌊",
+                joke: "What did the ocean say to the beach? Nothing, it just waved! 🌊😄 And why do fish live in salt water? Because pepper makes them sneeze! Just like how I have to be careful with spices when I'm cooking! 🐟",
+                riddle: "💧 I can be liquid, solid, or gas, through pipes and rivers I travel fast. I'm clear to see but wet to touch, all living things need me so much! *Answer: Water!* The essence of life itself! 🌊"
+            },
+            // Math topics
+            'math': {
+                explain: "🔢 Hello! Math is like a fun puzzle game! It helps us count things, like how many cookies are in the jar, or figure out how to share toys equally with friends! Numbers are like letters, but instead of making words, they help us solve problems and understand the world! Adding is like collecting things, and subtracting is like giving them away! ➕➖",
+                joke: "Why was 6 afraid of 7? Because 7, 8 (ate), 9! 😄 And why did the math book look so sad? Because it had too many problems! Just like how I sometimes have too many chores to do! 📚",
+                riddle: "🧮 I use numbers, symbols, and signs, to help you solve problems and find designs. From counting to adding, I make things clear, what subject am I that students sometimes fear? *Answer: Math!* The language of numbers and logic! ✨"
+            }
+        };
+        
+        // Check if we have specific knowledge about this topic
+        for (const [key, content] of Object.entries(knowledgeBase)) {
+            if (topic.includes(key) || key.includes(topic)) {
+                if (type === 'explain' && content.explain) return content.explain;
+                if (type === 'joke' && content.joke) return content.joke;
+                if (type === 'riddle' && content.riddle) return content.riddle;
+                if (type === 'solve' && content.explain) return `🔧 Let me help! ${content.explain} Now let's break this down step by step!`;
+            }
+        }
+        
+        // Generic but more intelligent responses
+        const intelligentResponses = {
             explain: [
-                `Hi! I'm Dobby! 🏠✨ "${input}" is a really interesting topic! Think of it like... when you're playing with your favorite toy! It's something that makes things work in a special way. Just like how magic makes things happen in my world, "${input}" has its own special way of working! 🌟`,
-                `Hello there! 🎭 Let me tell you about "${input}"! Imagine it's like building with blocks - each part has a special job to do! It's like when I help around the house - everything has its place and purpose! "${input}" works in a similar way, making things happen step by step! ✨`,
-                `Hey friend! 🌟 "${input}" is like a magical recipe! Just like when we make cookies, we need different ingredients that work together. "${input}" has different parts that team up to create something amazing! It's like teamwork, but with ideas instead of people! 🍪✨`
+                `🌟 Hi! I'm Dobby! Let me think about "${input}"... This is something that works in a special way! Imagine you're building something amazing - every part has to work together perfectly! That's exactly how "${input}" works - it has different pieces that all help each other to create something wonderful! It's like magic, but it follows rules that make sense! ✨`,
+                `Hello friend! 🎭 "${input}" is fascinating! Think of it like your favorite story - it has a beginning, middle, and end, and everything connects together! The cool thing about "${input}" is that once you understand how it works, you can use that knowledge to understand other things too! It's like learning a secret code! 🗝️`,
+                `Hey there! 🌟 "${input}" is like a puzzle that makes sense when you see all the pieces! Just like how I organize things in the house - everything has its place and purpose! When you understand "${input}", it's like finding the missing piece that makes the whole picture clear! Knowledge is truly magical! 📚✨`
             ],
             joke: [
-                `Why did the ${input} go to school? Because it wanted to be really smart! 📚😄 Just like how I learned to be a good house-elf, everything needs to learn and grow! *giggles* 🏠`,
-                `What did one ${input} say to another ${input}? "You're looking great today!" 😊✨ Even I tell the socks they're doing a good job when I fold them! Everything deserves kindness! 🧦`,
-                `Knock knock! Who's there? ${input}! ${input} who? ${input} is here to make you smile! 😄🌟 Just like how I love making everyone happy at home! ✨`
+                `😄 Here's a Dobby special! What makes "${input}" so great? It's always there when you need it most! Just like how socks always disappear when you need them - but "${input}" is the opposite, it appears when you're curious about it! *giggles* I love curious minds! 🧦✨`,
+                `🎭 Knock knock! Who's there? Someone who wants to learn about "${input}"! And you know what? That's the best kind of person - curious and ready to discover new things! Just like how I discovered that helping others makes me happy! 😊🌟`,
+                `😄 Why is "${input}" like a good friend? Because the more time you spend with it, the better you understand it! And just like friends, "${input}" can surprise you with how interesting it really is! Just like how every sock has its own personality! 🧦💫`
             ],
             riddle: [
-                `🧩 Here's a fun riddle about "${input}" for you! I'm thinking of something that's related to "${input}" and it's really important! It helps people every day and makes life better! Can you guess what it is? *The answer is: It's the wonderful thing that brings joy and learning - just like "${input}" does!* 🌟`,
-                `🎭 Riddle time! What has to do with "${input}" and is always helping people? It's something that makes the world a better place, just like how I try to help everyone! *Answer: It's knowledge and understanding about "${input}"!* ✨`,
-                `🌟 Here's a special riddle! I'm related to "${input}" and I love to learn new things every day! I'm always curious and asking questions! Who am I? *Answer: I'm YOU - someone who's curious about "${input}"!* 🎉`
+                `🧩 Here's a riddle for you! I'm something you can learn about, something you can think about, and something that becomes clearer the more you explore me. I'm related to "${input}" and I grow stronger in your mind the more attention you give me! What am I? *Answer: Understanding!* When you truly understand "${input}", you unlock a new superpower! 🌟`,
+                `🎯 Riddle time! I start as a question in your curious mind, I grow when you seek and search to find. I'm all about "${input}" and I shine so bright, when you discover me, everything feels right! What am I? *Answer: Knowledge!* The most magical treasure of all! ✨📚`,
+                `🌟 Here's a special riddle! I can't be touched but I can be shared, I can't be seen but I can be declared. I'm all about "${input}" and I make you wise, I live in your mind and help your thoughts rise! What am I? *Answer: Learning!* The adventure that never ends! 🚀`
             ],
             solve: [
-                `🔧 Let me help you solve this step by step! First, let's understand what "${input}" means - it's like organizing your toys! Step 1: Look at all the parts. Step 2: Figure out how they connect. Step 3: Put them together carefully! Just like how I organize the house - one room at a time! 🏠✨`,
-                `💡 Problem-solving time! For "${input}", let's think like detectives! 🕵️ Step 1: What do we know? Step 2: What do we need to find out? Step 3: How can we connect the dots? It's like when I figure out the best way to clean - I plan first, then act! 🧹`,
-                `🌟 Let's solve this together! "${input}" might seem tricky, but every big problem is just lots of small problems holding hands! Let's break it down: First, we understand the question. Then, we think of what we know. Finally, we put our knowledge to work! You've got this! 💪✨`
+                `🔧 Let's solve this together! First, let's break "${input}" down into smaller, easier pieces - like sorting toys into different boxes! Step 1: What do we already know? Step 2: What do we want to find out? Step 3: How can we connect what we know to what we want to learn? It's like being a detective, but for knowledge! 🕵️✨`,
+                `💡 Problem-solving time! "${input}" might seem big and complicated, but every expert was once a beginner! Let's start simple: What's the most important thing about "${input}"? Then we'll build on that, like stacking blocks to make a tower! Each new thing we learn makes us stronger! 🏗️🌟`,
+                `🌟 Here's how we tackle "${input}"! First, we stay curious and patient - just like how I learned to be a good helper! Then we ask good questions: What? How? Why? When? Where? Every question is like a key that opens a door to understanding! You're braver than you think and smarter than you know! 🗝️✨`
             ]
         };
 
-        const typeResponses = responses[type] || responses.explain;
+        const typeResponses = intelligentResponses[type] || intelligentResponses.explain;
         const randomIndex = Math.floor(Math.random() * typeResponses.length);
         return typeResponses[randomIndex];
     }
